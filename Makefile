@@ -15,6 +15,7 @@ deploy:
 	$(call extract_values)
 	helm upgrade --install $(SERVICE) ./charts/$(SERVICE) \
 		--namespace $(NAMESPACE) --create-namespace \
+		--atomic --timeout 5m \
 		-f charts/$(SERVICE)/values.yaml \
 		-f /tmp/$(SERVICE)-$(ENV).values.yaml
 

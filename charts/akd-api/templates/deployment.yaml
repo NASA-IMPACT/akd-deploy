@@ -25,8 +25,16 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
+            {{- if .Values.dependencies.redis.managed.enabled }}
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.dependencies.redis.managed.existingSecret }}
+                  key: url
+            {{- else }}
             - name: REDIS_URL
               value: "redis://{{ .Values.dependencies.redis.serviceName }}:{{ .Values.dependencies.redis.port }}/0"
+            {{- end }}
             - name: OLLAMA_BASE_URL
               value: {{ .Values.dependencies.ollama.baseUrl | quote }}
             {{- if .Values.bedrock.enabled }}

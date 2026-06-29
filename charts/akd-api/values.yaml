@@ -57,7 +57,13 @@ bedrock:
 # Wiring to other akd-deploy charts
 dependencies:
   redis:
-    serviceName: "akd-storage-redis-master" # from the akd-storage release
+    # Same two-mode pattern as akd-storage.redis: in-cluster (build the URL from the
+    # Bitnami subchart's Service) vs. managed (read REDIS_URL straight from a secret
+    # populated by infra/aws's ElastiCache output).
+    managed:
+      enabled: false
+      existingSecret: "" # key: url — must match akd-storage.redis.managed.existingSecret
+    serviceName: "akd-storage-redis-master" # from the akd-storage release, used when managed.enabled=false
     port: 6379
   ollama:
     baseUrl: "" # set explicitly per environment; can point at akd-inference's Service or an external instance

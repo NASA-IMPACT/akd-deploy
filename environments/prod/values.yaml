@@ -1,5 +1,8 @@
-# prod demonstrates the "I already have a GPU Ollama instance" case from the RFC:
-# akd-inference is disabled entirely, and akd-factuality points at the external instance.
+# prod demonstrates both managed-AWS-resource cases:
+# - postgres/redis use the RDS/ElastiCache instances provisioned by infra/aws (see
+#   infra/aws/environments/prod.tfvars), wired in via ExternalSecret (environments/prod/secrets/)
+# - akd-inference is disabled entirely, since this environment already has access to an
+#   external GPU Ollama instance (the RFC's "bring your own GPU" case)
 akd-storage:
   postgresql:
     enabled: false
@@ -7,7 +10,10 @@ akd-storage:
       enabled: true
       existingSecret: "akd-prod-rds-connection"
   redis:
-    enabled: true
+    enabled: false
+    managed:
+      enabled: true
+      existingSecret: "akd-prod-redis-connection"
   migrations:
     image:
       tag: "v0.1.0"
@@ -38,6 +44,10 @@ akd-api:
   config:
     AUTH_MODE: "required"
   dependencies:
+    redis:
+      managed:
+        enabled: true
+        existingSecret: "akd-prod-redis-connection"
     ollama:
       baseUrl: "https://ollama.prod-cluster.example.org"
 

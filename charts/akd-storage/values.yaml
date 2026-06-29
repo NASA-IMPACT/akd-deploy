@@ -17,8 +17,15 @@ postgresql:
       enabled: true
       size: 20Gi
 
+# Same two-mode pattern as postgresql above:
+#  - redis.enabled=true, redis.managed.enabled=false -> deploys Bitnami redis subchart in-cluster
+#  - redis.enabled=false, redis.managed.enabled=true  -> skips the subchart, akd-api reads
+#    REDIS_URL directly from redis.managed.existingSecret (key: url) instead
 redis:
   enabled: true
+  managed:
+    enabled: false
+    existingSecret: "" # must contain key: url (full redis:// connection string)
   auth:
     enabled: false
   master:
