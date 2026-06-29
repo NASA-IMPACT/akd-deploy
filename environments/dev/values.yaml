@@ -1,0 +1,50 @@
+akd-storage:
+  postgresql:
+    enabled: true
+    managed:
+      enabled: false
+    primary:
+      persistence:
+        size: 20Gi
+  redis:
+    enabled: true
+  migrations:
+    image:
+      tag: "dev"
+
+akd-auth:
+  keycloak:
+    enabled: true
+    ingress:
+      hostname: "auth-dev.akd.example.org"
+
+akd-inference:
+  enabled: true
+  models:
+    - llama3.2
+  resources:
+    limits:
+      nvidia.com/gpu: 1
+  nodeSelector:
+    eks.amazonaws.com/nodegroup: gpu-workers
+
+akd-factuality:
+  ollama:
+    useInCluster: true
+
+akd-api:
+  image:
+    tag: "dev"
+  replicaCount: 1
+  ingress:
+    hostname: "api-dev.akd.example.org"
+  config:
+    AUTH_MODE: "none"
+  dependencies:
+    ollama:
+      baseUrl: "" # left blank in dev unless akd-api itself needs direct Ollama access
+
+# Feature flags
+features:
+  factReasoner:
+    enabled: false # see IMPLEMENTATION_PLAN.md - status of FactReasoner unclear, needs confirmation

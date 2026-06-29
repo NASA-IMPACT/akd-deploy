@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "akd-inference.fullname" . }}-pull-models
+  labels:
+    {{- include "akd-inference.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: pull-models
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          command:
+            - /bin/sh
+            - -c
+            - |
+              {{- range .Values.models }}
+              ollama pull {{ . }} --host {{ include "akd-inference.fullname" $ }}:{{ $.Values.service.port }}
+              {{- end }}

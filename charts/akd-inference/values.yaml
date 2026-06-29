@@ -1,0 +1,40 @@
+# akd-inference values
+# Set this release's enablement at the environment level (environments/<env>/values.yaml ->
+# akd-inference.enabled). When false, akd-deploy skips installing this chart entirely and
+# akd-factuality.ollama.baseUrl should point at an externally managed Ollama instance instead.
+enabled: true
+
+image:
+  repository: "ollama/ollama"
+  tag: "latest"
+
+replicaCount: 1
+
+models:
+  - llama3.2
+  - mistral
+
+service:
+  type: ClusterIP
+  port: 11434
+
+persistence:
+  enabled: true
+  size: 100Gi
+  storageClassName: ""
+
+resources:
+  limits:
+    nvidia.com/gpu: 1
+    memory: 16Gi
+  requests:
+    cpu: "2"
+    memory: 8Gi
+
+# Cloud-specific — override per environment in environments/<env>/values.yaml
+nodeSelector:
+  eks.amazonaws.com/nodegroup: gpu-workers
+tolerations:
+  - key: "nvidia.com/gpu"
+    operator: "Exists"
+    effect: "NoSchedule"

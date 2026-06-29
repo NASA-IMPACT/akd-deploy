@@ -1,0 +1,6 @@
+apiVersion: v2
+name: akd-api
+description: The AKD FastAPI application — consolidated agent endpoint, LangGraph workflow engine
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

@@ -1,0 +1,11 @@
+apiVersion: v2
+name: akd-auth
+description: Keycloak OIDC/OAuth2 identity provider for AKD, configured from akd-keycloak
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+dependencies:
+  - name: keycloak
+    version: "21.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: keycloak.enabled

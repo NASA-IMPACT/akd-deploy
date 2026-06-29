@@ -1,0 +1,49 @@
+akd-storage:
+  postgresql:
+    enabled: true
+    managed:
+      enabled: false
+    primary:
+      persistence:
+        size: 50Gi
+  redis:
+    enabled: true
+  migrations:
+    image:
+      tag: "staging"
+
+akd-auth:
+  keycloak:
+    enabled: true
+    ingress:
+      hostname: "auth-staging.akd.example.org"
+
+akd-inference:
+  enabled: true
+  models:
+    - llama3.2
+    - mistral
+  resources:
+    limits:
+      nvidia.com/gpu: 1
+  nodeSelector:
+    eks.amazonaws.com/nodegroup: gpu-workers
+
+akd-factuality:
+  ollama:
+    useInCluster: true
+  autoscaling:
+    enabled: true
+
+akd-api:
+  image:
+    tag: "staging"
+  replicaCount: 2
+  ingress:
+    hostname: "api-staging.akd.example.org"
+  config:
+    AUTH_MODE: "required"
+
+features:
+  factReasoner:
+    enabled: false

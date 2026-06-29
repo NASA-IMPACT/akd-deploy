@@ -1,0 +1,37 @@
+# akd-storage values
+# Two postgres modes:
+#  - postgresql.enabled=true, postgresql.managed.enabled=false -> deploys Bitnami postgresql subchart in-cluster
+#  - postgresql.enabled=false, postgresql.managed.enabled=true  -> skips the subchart, migration Job connects
+#    to an externally provisioned DB (RDS/Cloud SQL) using postgresql.managed.existingSecret
+postgresql:
+  enabled: true
+  managed:
+    enabled: false
+    existingSecret: "" # must contain keys: host, port, username, password, database
+  auth:
+    database: akd_data
+    username: akd_user
+    existingSecret: "akd-postgres-credentials" # bitnami subchart secret, keys: postgres-password, password
+  primary:
+    persistence:
+      enabled: true
+      size: 20Gi
+
+redis:
+  enabled: true
+  auth:
+    enabled: false
+  master:
+    persistence:
+      enabled: true
+      size: 5Gi
+
+migrations:
+  enabled: true
+  image:
+    repository: "ghcr.io/nasa-impact/akd-api"
+    tag: "" # must match akd-api.image.tag in the same environment values.yaml
+  command: ["alembic", "upgrade", "head"]
+  existingSecret: "akd-db-connection" # key: DATABASE_URL
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 600

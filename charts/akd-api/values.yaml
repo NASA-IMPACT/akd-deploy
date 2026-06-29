@@ -1,0 +1,72 @@
+# akd-api values
+# Interim: image points at the existing akd-services monorepo image until step 3 of the
+# migration plan (extracting src/api/ into its own akd-api repo) is complete.
+image:
+  repository: "ghcr.io/nasa-impact/akd-services"
+  tag: ""
+  pullPolicy: IfNotPresent
+
+replicaCount: 2
+
+service:
+  type: ClusterIP
+  port: 8001
+
+ingress:
+  enabled: true
+  hostname: "api.akd.example.org" # overridden per environment
+  tls:
+    enabled: true
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 70
+
+resources:
+  requests:
+    cpu: "1"
+    memory: 4Gi
+  limits:
+    cpu: "4"
+    memory: 16Gi
+
+healthCheck:
+  path: /health
+
+# Plain (non-secret) configuration — mirrors api_service_stack.py's container env
+config:
+  BACKEND_CORS_ORIGINS: "*"
+  AUTH_MODE: "none" # "none" | "required" — set to "required" once akd-auth/Keycloak is wired up
+  DATABASE_ENABLED: "true"
+  RATE_LIMIT_REQUESTS: "200"
+  RATE_LIMIT_SECONDS: "3600"
+  ADS_SEARCH_MCP_URL: "https://distinctive-maroon-puma.fastmcp.app/mcp"
+  CODE_SEARCH_MCP_URL: "https://developing-purple-wallaby.fastmcp.app/mcp"
+  EXPERIMENT_STATUS_MCP_URL: "https://young-copper-falcon.fastmcp.app/mcp"
+
+# Bedrock is AWS-specific and conflicts with the cloud-agnostic goal — see
+# IMPLEMENTATION_PLAN.md. Off by default; enable only on AWS-backed environments
+# that still need it.
+bedrock:
+  enabled: false
+  modelArn: ""
+
+# Wiring to other akd-deploy charts
+dependencies:
+  redis:
+    serviceName: "akd-storage-redis-master" # from the akd-storage release
+    port: 6379
+  ollama:
+    baseUrl: "" # set explicitly per environment; can point at akd-inference's Service or an external instance
+
+# Secrets — must already exist in the namespace (see IMPLEMENTATION_PLAN.md#secrets-management)
+existingSecrets:
+  database: "akd-db-connection" # key: DATABASE_URL
+  jwt: "akd-api-jwt" # key: SECRET_KEY
+  openai: "akd-api-openai" # key: OPENAI_API_KEY
+  serper: "akd-api-serper" # key: SERPER_API_KEY
+  mcp: "akd-api-mcp-keys" # keys: CODE_SEARCH_MCP_KEY, PDS_MCP_KEY, EXPERIMENT_STATUS_MCP_KEY
+  admin: "akd-api-admin" # keys: ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_FULL_NAME

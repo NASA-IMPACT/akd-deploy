@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "akd-factuality.fullname" . }}
+  labels:
+    {{- include "akd-factuality.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "akd-factuality.labels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "akd-factuality.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: akd-factuality
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: 8080
+          env:
+            - name: OLLAMA_BASE_URL
+              value: {{ include "akd-factuality.ollamaBaseUrl" . | quote }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.existingSecret }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

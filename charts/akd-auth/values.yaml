@@ -1,0 +1,18 @@
+# akd-auth values
+keycloak:
+  enabled: true
+  auth:
+    existingSecret: "akd-keycloak-admin" # key: admin-password
+  postgresql:
+    enabled: true # Keycloak gets its own small Postgres; the app DB is managed separately by akd-storage
+  ingress:
+    enabled: true
+    hostname: "auth.akd.example.org" # overridden per environment
+
+# Realm/client/scope config, sourced from https://github.com/NASA-IMPACT/akd-keycloak
+# Expected to be a realm export JSON committed to that repo and mounted here via configmap.
+realm:
+  import:
+    enabled: true
+  name: akd
+  configMapName: "akd-keycloak-realm" # created from akd-keycloak's exported realm-export.json

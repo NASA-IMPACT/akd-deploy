@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "akd-api.fullname" . }}
+  labels:
+    {{- include "akd-api.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 8001
+  selector:
+    {{- include "akd-api.labels" . | nindent 4 }}

@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "akd-api.fullname" . }}
+  labels:
+    {{- include "akd-api.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "akd-api.labels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "akd-api.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: akd-api
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8001
+          env:
+            {{- range $key, $value := .Values.config }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            - name: REDIS_URL
+              value: "redis://{{ .Values.dependencies.redis.serviceName }}:{{ .Values.dependencies.redis.port }}/0"
+            - name: OLLAMA_BASE_URL
+              value: {{ .Values.dependencies.ollama.baseUrl | quote }}
+            {{- if .Values.bedrock.enabled }}
+            - name: BEDROCK_MODEL_ARN
+              value: {{ .Values.bedrock.modelArn | quote }}
+            {{- end }}
+            - name: DATABASE_CONNECTION_PARAMS_SECRET_ARN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.existingSecrets.database }}
+                  key: DATABASE_URL
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.existingSecrets.jwt }}
+                  key: SECRET_KEY
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.existingSecrets.openai }}
+                  key: OPENAI_API_KEY
+            - name: SERPER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.existingSecrets.serper }}
+                  key: SERPER_API_KEY
+            - name: CODE_SEARCH_MCP_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.existingSecrets.mcp }}
+                  key: CODE_SEARCH_MCP_KEY
+            - name: PDS_MCP_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.existingSecrets.mcp }}
+                  key: PDS_MCP_KEY
+            - name: EXPERIMENT_STATUS_MCP_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.existingSecrets.mcp }}
+                  key: EXPERIMENT_STATUS_MCP_KEY
+            - name: ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.existingSecrets.admin }}
+                  key: ADMIN_EMAIL
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.existingSecrets.admin }}
+                  key: ADMIN_PASSWORD
+            - name: ADMIN_FULL_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.existingSecrets.admin }}
+                  key: ADMIN_FULL_NAME
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.healthCheck.path }}
+              port: 8001
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.healthCheck.path }}
+              port: 8001
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            failureThreshold: 3

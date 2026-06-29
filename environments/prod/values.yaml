@@ -1,0 +1,46 @@
+# prod demonstrates the "I already have a GPU Ollama instance" case from the RFC:
+# akd-inference is disabled entirely, and akd-factuality points at the external instance.
+akd-storage:
+  postgresql:
+    enabled: false
+    managed:
+      enabled: true
+      existingSecret: "akd-prod-rds-connection"
+  redis:
+    enabled: true
+  migrations:
+    image:
+      tag: "v0.1.0"
+
+akd-auth:
+  keycloak:
+    enabled: true
+    ingress:
+      hostname: "auth.akd.example.org"
+
+akd-inference:
+  enabled: false # this environment already has access to an external GPU Ollama instance
+
+akd-factuality:
+  ollama:
+    useInCluster: false
+    externalBaseUrl: "https://ollama.prod-cluster.example.org"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+
+akd-api:
+  image:
+    tag: "v0.1.0"
+  replicaCount: 3
+  ingress:
+    hostname: "api.akd.example.org"
+  config:
+    AUTH_MODE: "required"
+  dependencies:
+    ollama:
+      baseUrl: "https://ollama.prod-cluster.example.org"
+
+features:
+  factReasoner:
+    enabled: false

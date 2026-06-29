@@ -1,0 +1,7 @@
+akd-auth deployed.
+
+This chart does not generate Keycloak realm config itself — it expects a ConfigMap named
+{{ .Values.realm.configMapName }} to already exist in this namespace, created from the realm
+export JSON in https://github.com/NASA-IMPACT/akd-keycloak (e.g. via a CI step that runs
+`kubectl create configmap {{ .Values.realm.configMapName }} --from-file=realm-export.json
+  --dry-run=client -o yaml | kubectl apply -f -` before `helm upgrade`).
